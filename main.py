@@ -11,51 +11,6 @@ __main__ = 1
 
 targetDir = "C:\Users\\nrosetti94\Documents\Flickr\sampleimages\\"
 
-def findValidImageTags():
-    print targetDir
-    filepaths = []
-    imageIds = []
-    for subdir, dirs, files in os.walk(targetDir):
-        for file in files:
-            if(file.endswith('.jpg')):
-                imageIds.append(file.rpartition('.')[0])
-                filepaths.append(subdir + os.sep + file)
-
-    """images = [(cv2.imread(filepath)) for filepath in filepaths]
-
-    for i in range(0, len(images)):
-        if len(images[i].shape) == 3:
-            images[i] = cv2.cvtColor(images[i], cv2.COLOR_BGR2RGB)
-
-    imageIds = [imageIds]
-    imageIds = [list(x) for x in zip(*imageIds)]"""
-
-    tagsFile = open("C:/Users/nrosetti94/Desktop/yfcc100m_autotags-v1", "r")
-
-    idArray = imageIds
-    print idArray
-
-    count = 0
-    index = 0
-    idxs = []
-    newIdList = []
-    with open("C:/Users/nrosetti94/Desktop/yfcc100m_autotags-v1", "r") as tags:
-        for line in tags:
-            tag = line.split('\t')
-            if tag[0] in idArray:
-                idx = idArray.index(tag[0])
-                newIdList.append([imageIds[idx], tag[1].strip('\n')])
-                idxs.append(idx)
-                print count
-                count += 1
-
-    fileOut = open("validTags.csv", 'w')
-
-    for i in range(len(newIdList)):
-        fileOut.write(newIdList[i][0] + ',' + newIdList[i][1] + '\n')
-
-    fileOut.close()
-
 def loadTagMap():
     tagsDict = []
     with open("Tagsmap.csv") as csvFile:
@@ -94,14 +49,14 @@ def main():
         tagsCount.append(len(tag[1]))
     tagsDf = pd.DataFrame(tagsCount, index=tags)
     tagsDf = tagsDf[0][tagsDf[0] > 40]
-
+    print tagsDf
     topTags = tagsDf.index.values
     tagsDict = {}
 
     for tag in tagIds:
         tagsDict[tag[0]] = tag[1]
 
-    createCompositeHistogram(tagsDict[topTags[0]])
+    #createCompositeHistogram(tagsDict[topTags[0]])
 
 
 if __main__:
