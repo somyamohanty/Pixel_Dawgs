@@ -9,7 +9,7 @@ import pandas as pd
 __author__ = 'nrosetti94'
 __main__ = 1
 
-targetDir = "C:\Users\\nrosetti94\Documents\Flickr\sampleimages\\"
+targetDir = "sampleimages\\"
 
 def loadTagMap():
     tagsDict = []

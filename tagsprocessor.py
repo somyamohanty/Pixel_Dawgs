@@ -4,12 +4,12 @@ import sqlite3 as sql
 
 __author__ = 'SATYANARAYANAREDDY'
 __main__ = 1
-targetDir = "C:\Users\\nrosetti94\Documents\Flickr\sampleimages\\"
+targetDir = "sampleimages\\"
 
 #conn = sql.connect('autotags.db')
 
 def createTagsTable():
-    with open("C:/Users/nrosetti94/Desktop/yfcc100m_autotags-v1", "r") as tags:
+    with open("trainingset/yfcc100m_autotags-v1", "r") as tags:
         for line in tags:
             tag = line.split('\t')
 
@@ -51,7 +51,7 @@ def findValidImageTags():
                 imageIds.append(file.rpartition('.')[0])
                 filepaths.append(subdir + os.sep + file)
 
-    tagsFile = open("C:/Users/nrosetti94/Desktop/yfcc100m_autotags-v1", "r")
+    tagsFile = open("trainingset/yfcc100m_autotags-v1", "r")
 
     idArray = imageIds
     print idArray
@@ -60,7 +60,7 @@ def findValidImageTags():
     index = 0
     idxs = []
     newIdList = []
-    with open("C:/Users/nrosetti94/Desktop/yfcc100m_autotags-v1", "r") as tags:
+    with open("trainingset/yfcc100m_autotags-v1", "r") as tags:
         for line in tags:
             tag = line.split('\t')
             if tag[0] in idArray:
