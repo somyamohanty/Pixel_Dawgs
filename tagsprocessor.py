@@ -13,7 +13,6 @@ def createTagsTable():
         for line in tags:
             tag = line.split('\t')
 
-
 def generateTagMap():
     tags_dictionary = {}
     fi = open("validTags.csv")
