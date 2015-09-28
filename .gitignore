@@ -1,0 +1,6 @@
+sampleimages/*
+trainingset/*
+download_tracker.txt
+validTags.csv
+Tagsmap.csv
+autotags.db
