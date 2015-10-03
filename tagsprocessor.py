@@ -50,8 +50,6 @@ def findValidImageTags():
                 imageIds.append(file.rpartition('.')[0])
                 filepaths.append(subdir + os.sep + file)
 
-    tagsFile = open("trainingset/yfcc100m_autotags-v1", "r")
-
     idArray = imageIds
     print idArray
 
@@ -59,23 +57,80 @@ def findValidImageTags():
     index = 0
     idxs = []
     newIdList = []
-    with open("trainingset/yfcc100m_autotags-v1", "r") as tags:
+
+    tagsDict = {}
+    with open("trainingset/autotags-1", "rU") as tags:
         for line in tags:
             tag = line.split('\t')
-            if tag[0] in idArray:
-                idx = idArray.index(tag[0])
-                newIdList.append([imageIds[idx], tag[1].strip('\n')])
-                idxs.append(idx)
-                print count
-                count += 1
+            if(len(tag) == 2):
+                tagsDict[tag[0]] = tag[1]
+
+    for id in idArray:
+        try:
+            newIdList.append([id, tagsDict[id]])
+        except:
+            continue
+
+    tagsDict.clear()
+    with open("trainingset/autotags-2", "rU") as tags:
+        for line in tags:
+            tag = line.split('\t')
+            if(len(tag) == 2):
+                tagsDict[tag[0]] = tag[1]
+
+    for id in idArray:
+        try:
+            newIdList.append([id, tagsDict[id]])
+        except:
+            continue
+
+    tagsDict.clear()
+    with open("trainingset/autotags-3", "rU") as tags:
+        for line in tags:
+            tag = line.split('\t')
+            if(len(tag) == 2):
+                tagsDict[tag[0]] = tag[1]
+
+    for id in idArray:
+        try:
+            newIdList.append([id, tagsDict[id]])
+        except:
+            continue
+
+    for id in tagsDict:
+        print id
 
     fileOut = open("validTags.csv", 'w')
 
     for i in range(len(newIdList)):
-        fileOut.write(newIdList[i][0] + ',' + newIdList[i][1] + '\n')
+        fileOut.write(newIdList[i][0] + ',' + newIdList[i][1])
 
     fileOut.close()
 
+def splitTags():
+    tagsFile1 = open("trainingset/autotags-1", "w")
+    tagsFile2 = open("trainingset/autotags-2", "w")
+    tagsFile3 = open("trainingset/autotags-3", "w")
+    tags = open("trainingset/yfcc100m_autotags-v1", "rU")
+    count = 0
+    while 1:
+        count += 1
+        line = tags.readline()
+        if not line:
+            print count
+            break
+
+        if(count < 35000000):
+            tagsFile1.write(line)
+        elif (count < 70000000):
+            tagsFile2.write(line)
+        else:
+            tagsFile3.write(line)
+
+    tagsFile1.close()
+    tagsFile2.close()
+
 if __main__:
-    findValidImageTags()
+    #splitTags()
+    #findValidImageTags()
     generateTagMap()

@@ -33,6 +33,12 @@ def createCompositeHistogram(imageIds):
     plt.show()
 
     color = ('y','r','b')
+
+    colorHist = cv2.calcHist(images[0], (1, 2), None, [256], [0,256])
+    plt.plot(colorHist, color='r')
+    plt.xlim([0,256])
+    plt.show()
+
     for i,col in enumerate(color):
         histr = cv2.calcHist([images[0]],[i],None,[256],[0,256])
         plt.plot(histr,color = col)
@@ -49,7 +55,6 @@ def main():
         tagsCount.append(len(tag[1]))
     tagsDf = pd.DataFrame(tagsCount, index=tags)
     tagsDf = tagsDf[0][tagsDf[0] > 40]
-    print tagsDf
     topTags = tagsDf.index.values
     tagsDict = {}
 
