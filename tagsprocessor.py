@@ -111,6 +111,7 @@ def splitTags():
     tagsFile1 = open("trainingset/autotags-1", "w")
     tagsFile2 = open("trainingset/autotags-2", "w")
     tagsFile3 = open("trainingset/autotags-3", "w")
+
     tags = open("trainingset/yfcc100m_autotags-v1", "rU")
     count = 0
     while 1:
@@ -129,6 +130,7 @@ def splitTags():
 
     tagsFile1.close()
     tagsFile2.close()
+    tagsFile3.close()
 
 if __main__:
     #splitTags()

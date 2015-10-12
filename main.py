@@ -5,6 +5,7 @@ import os
 import csv
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 
 __author__ = 'nrosetti94'
 __main__ = 1
@@ -15,37 +16,93 @@ def loadTagMap():
     tagsDict = []
     with open("Tagsmap.csv") as csvFile:
         tags = csv.reader(csvFile, delimiter=",")
+
         for row in tags:
             tagsDict.append([row[0],row[1:]])
     return tagsDict
 
+def loadIds(start, end):
+    imageIds = []
+    with open("validTags.csv") as tagFile:
+        tags = csv.reader(tagFile, delimiter=",")
+        count = 0
+        for line in tags:
+            if count < start:
+                continue
+            if count > end:
+                break
+
+            imageIds.append(line[0])
+            count += 1
+
+    return imageIds
+
+
 def loadImage(id):
     filename = targetDir + id + ".jpg"
-    print filename
-    return cv2.cvtColor(cv2.imread(filename), cv2.COLOR_BGR2YCR_CB)
+    image = cv2.imread(filename)
+    if image == None:
+        return None
+    if len(image.shape) == 3:
+        return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    return None
 
-def createCompositeHistogram(imageIds):
-    images = []
+
+def getHistogram(image):
+    #this should give just the Cr and Cb channels
+    hist = cv2.calcHist([image], [0, 1, 2], None, [180, 256, 256], [0, 180, 0, 256, 0, 256])
+
+    return hist
+    """Y = cv2.calcHist(c1, [0], None, [256], [0, 256])
+    Cr = cv2.calcHist(c2, [0], None, [256], [0, 256])
+    Cb = cv2.calcHist(c3, [0], None, [256], [0, 256])
+
+    return [Y, Cr, Cb]"""
+
+
+def createCompositeHistogram(*args):
+    tag = args[0][0]
+    imageIds = args[0][1]
+    print "Starting tag: " + tag
+    count = 0
+    compositeHist = None
+
     for id in imageIds:
-        images.append(loadImage(id))
+        image = loadImage(id)
+        if not image == None:
+            histogram = getHistogram(image)
+            if count == 0:
+                compositeHist = histogram
+                """compositeHistY = histogram[0]
+                compositeHistCr = histogram[1]
+                compositeHistCb = histogram[2]"""
+                count += 1
+            else:
+                compositeHist = cv2.add(compositeHist, histogram)
+                compositeHist /= 2
+                """compositeHistY = cv2.add(compositeHistY, histogram[0])
+                compositeHistY /= 2
+                compositeHistCr = cv2.add(compositeHistCr, histogram[1])
+                compositeHistCr /= 2
+                compositeHistCb = cv2.add(compositeHistCb, histogram[2])
+                compositeHistCb /= 2"""
 
-    plt.imshow(images[0])
-    plt.show()
+    print "Finish tag: " + tag
 
-    color = ('y','r','b')
+    return compositeHist
 
-    colorHist = cv2.calcHist(images[0], (1, 2), None, [256], [0,256])
-    plt.plot(colorHist, color='r')
-    plt.xlim([0,256])
-    plt.show()
+def writeCompositeHistograms(tags, hist):
+    histDict = {}
 
-    for i,col in enumerate(color):
-        histr = cv2.calcHist([images[0]],[i],None,[256],[0,256])
-        plt.plot(histr,color = col)
-        plt.xlim([0,256])
-    plt.show()
+    count = 0
+    for tag in tags:
+        histDict[tag] = hist[count]
+        count += 1
 
-def main():
+    np.savez('histogram',  **histDict)
+
+
+def getTopTags():
     tagIds = loadTagMap()
 
     tagsCount = []
@@ -54,17 +111,85 @@ def main():
         tags.append(tag[0])
         tagsCount.append(len(tag[1]))
     tagsDf = pd.DataFrame(tagsCount, index=tags)
-    tagsDf = tagsDf[0][tagsDf[0] > 40]
+    print tagsDf.rank(pct=True) > 0.99
+    tagsDf = tagsDf[0][tagsDf[0].rank(pct=True) > 0.995]
     topTags = tagsDf.index.values
+    print topTags
     tagsDict = {}
 
     for tag in tagIds:
         tagsDict[tag[0]] = tag[1]
 
-    #createCompositeHistogram(tagsDict[topTags[0]])
+    return topTags, tagsDict
+
+def writeHistograms(topTags, tagsDict):
+    p = mp.Pool(6)
+    compositeHists = []
+
+    topTagsList = []
+    for tag in topTags:
+        topTagsList.append([tag, tagsDict[tag]])
+
+    compositeHistograms = p.map(createCompositeHistogram, topTagsList)
+
+    for histogram in compositeHistograms:
+        compositeHists.append(histogram)
+
+    writeCompositeHistograms(topTags, compositeHists)
+
+    with open('topTags.txt', 'w+') as tagsOut:
+        for tag in topTags:
+            tagsOut.write(tag + '\n')
+
+def loadHistograms():
+    hists  = np.load('histogram.npz')
+
+    tagsFile = open('topTags.txt', 'rU')
+    tags = []
+    for line in tagsFile:
+        tags.append(line.rstrip())
+
+    return tags, hists
+
+def calcBackProject(image, tags, histograms):
+    probability = {}
+    for tag in tags:
+        print tag
+        result = cv2.calcBackProject([image], [0, 1, 2], histograms[tag], [0, 180, 0, 256, 0, 256], 1)
+        cv2.normalize(result, result, 0, 255, cv2.NORM_MINMAX)
+        cv2.threshold(result, 50, 255, cv2.THRESH_BINARY, result)
+        cv2.imshow('result', result)
+        cv2.waitKey(0)
+        probabilityValue  = cv2.countNonZero(result)/float(image.shape[0] * image.shape[1])
+        probability[tag] = probabilityValue
+
+    return probability
 
 
-if __main__:
+def main():
+    topTags, tagsDict = getTopTags()
+
+    #writeHistograms(topTags, tagsDict)
+
+    tags, histograms = loadHistograms()
+    imageIds = loadIds(0, 100)
+
+
+
+    probabilityList = []
+    for id in imageIds:
+        print id
+        probabilityList.append(calcBackProject(loadImage(id), tags, histograms))
+
+    count = 0
+    for probability in probabilityList:
+        print imageIds[count]
+        for tag in topTags:
+            print tag + ': ' + str(probability[tag])
+        count += 1
+
+
+if __name__ == '__main__':
     main()
 
 
