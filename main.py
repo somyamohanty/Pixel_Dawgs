@@ -6,6 +6,8 @@ import csv
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
+import clustering as cl
+from skimage import io
 
 __author__ = 'nrosetti94'
 __main__ = 1
@@ -40,11 +42,11 @@ def loadIds(start, end):
 
 def loadImage(id):
     filename = targetDir + id + ".jpg"
-    image = cv2.imread(filename)
+    image = io.imread(filename)
     if image == None:
         return None
     if len(image.shape) == 3:
-        return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        return image
     return None
 
 
@@ -70,22 +72,15 @@ def createCompositeHistogram(*args):
     for id in imageIds:
         image = loadImage(id)
         if not image == None:
-            histogram = getHistogram(image)
+            cl.slic(image)
+            """histogram = getHistogram(image)
             if count == 0:
                 compositeHist = histogram
-                """compositeHistY = histogram[0]
-                compositeHistCr = histogram[1]
-                compositeHistCb = histogram[2]"""
                 count += 1
             else:
+                print compositeHist.shape
                 compositeHist = cv2.add(compositeHist, histogram)
-                compositeHist /= 2
-                """compositeHistY = cv2.add(compositeHistY, histogram[0])
-                compositeHistY /= 2
-                compositeHistCr = cv2.add(compositeHistCr, histogram[1])
-                compositeHistCr /= 2
-                compositeHistCb = cv2.add(compositeHistCb, histogram[2])
-                compositeHistCb /= 2"""
+                print compositeHist.shape"""
 
     print "Finish tag: " + tag
 
@@ -142,7 +137,7 @@ def writeHistograms(topTags, tagsDict):
             tagsOut.write(tag + '\n')
 
 def loadHistograms():
-    hists  = np.load('histogram.npz')
+    hists = np.load('histogram.npz')
 
     tagsFile = open('topTags.txt', 'rU')
     tags = []
@@ -153,14 +148,14 @@ def loadHistograms():
 
 def calcBackProject(image, tags, histograms):
     probability = {}
+
+    cl.kmeans(image)
+
     for tag in tags:
         print tag
         result = cv2.calcBackProject([image], [0, 1, 2], histograms[tag], [0, 180, 0, 256, 0, 256], 1)
-        cv2.normalize(result, result, 0, 255, cv2.NORM_MINMAX)
-        cv2.threshold(result, 50, 255, cv2.THRESH_BINARY, result)
-        cv2.imshow('result', result)
-        cv2.waitKey(0)
-        probabilityValue  = cv2.countNonZero(result)/float(image.shape[0] * image.shape[1])
+
+        probabilityValue = cv2.countNonZero(result)/float(image.shape[0] * image.shape[1])
         probability[tag] = probabilityValue
 
     return probability
@@ -169,12 +164,10 @@ def calcBackProject(image, tags, histograms):
 def main():
     topTags, tagsDict = getTopTags()
 
-    #writeHistograms(topTags, tagsDict)
+    writeHistograms(topTags, tagsDict)
 
     tags, histograms = loadHistograms()
     imageIds = loadIds(0, 100)
-
-
 
     probabilityList = []
     for id in imageIds:
