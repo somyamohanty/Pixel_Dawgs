@@ -118,7 +118,7 @@ def getTopTags():
     return topTags, tagsDict
 
 def writeHistograms(topTags, tagsDict):
-    p = mp.Pool(6)
+    p = mp.Pool(1)
     compositeHists = []
 
     topTagsList = []

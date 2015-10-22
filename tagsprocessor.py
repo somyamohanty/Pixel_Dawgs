@@ -51,7 +51,6 @@ def findValidImageTags():
                 filepaths.append(subdir + os.sep + file)
 
     idArray = imageIds
-    print idArray
 
     count = 0
     index = 0
@@ -97,9 +96,6 @@ def findValidImageTags():
         except:
             continue
 
-    for id in tagsDict:
-        print id
-
     fileOut = open("validTags.csv", 'w')
 
     for i in range(len(newIdList)):
@@ -118,7 +114,6 @@ def splitTags():
         count += 1
         line = tags.readline()
         if not line:
-            print count
             break
 
         if(count < 35000000):
@@ -133,6 +128,6 @@ def splitTags():
     tagsFile3.close()
 
 if __main__:
-    #splitTags()
-    #findValidImageTags()
+    splitTags()
+    findValidImageTags()
     generateTagMap()
