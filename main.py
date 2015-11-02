@@ -72,7 +72,10 @@ def createCompositeHistogram(*args):
     for id in imageIds:
         image = loadImage(id)
         if not image == None:
-            cl.slic(image)
+            print id
+            segmented, labels = cl.slic(image)
+            io.imsave("segmented/" + str(id) + ".jpg", image)
+            io.imsave("segmented/" + str(id) + "_segmented.jpg", segmented)
             """histogram = getHistogram(image)
             if count == 0:
                 compositeHist = histogram
@@ -85,6 +88,16 @@ def createCompositeHistogram(*args):
     print "Finish tag: " + tag
 
     return compositeHist
+
+def readImagePoints(id, pointList):
+    image = loadImage(id)
+    if not image == None:
+        segmented, labels = cl.slic(image)
+        segments = labels[0]
+        n_clusters = labels[2]
+        labels = labels[1]
+
+        print labels[labels == 0]
 
 def writeCompositeHistograms(tags, hist):
     histDict = {}
@@ -118,7 +131,7 @@ def getTopTags():
     return topTags, tagsDict
 
 def writeHistograms(topTags, tagsDict):
-    p = mp.Pool(1)
+    p = mp.Pool(6)
     compositeHists = []
 
     topTagsList = []
@@ -162,6 +175,8 @@ def calcBackProject(image, tags, histograms):
 
 
 def main():
+    #readImagePoints('100346')
+
     topTags, tagsDict = getTopTags()
 
     writeHistograms(topTags, tagsDict)
