@@ -45,7 +45,7 @@ def slic(image):
         medianTuples = np.array(medianTuples)
         edgeResponse = np.array(edgeResponse)
         cv2.normalize(medianTuples, medianTuples, 0, 255, cv2.NORM_MINMAX)
-        cv2.normalize(edgeResponse, edgeResponse, 0, 20, cv2.NORM_MINMAX)
+        cv2.normalize(edgeResponse, edgeResponse, 0, 25, cv2.NORM_MINMAX)
         medianTuples = medianTuples.tolist()
         for i in range(len(medianTuples)):
             medianTuples[i].append(edgeResponse[i])
@@ -57,23 +57,33 @@ def slic(image):
         # Number of clusters in labels, ignoring noise if present.
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
-        col = []
-        for cluster in range(n_clusters_):
-            col.append(np.random.rand(3,))
+        #create list of segments for each label
+        labelledSegments = []
+        for i in range(n_clusters_):
+            segment = np.zeros(segments.shape, dtype=bool)
+            for j in range(labels.shape[0]):
+                if labels[j] == i:
+                    segment[segments == j] = True
+            labelledSegments.append(segment)
 
+        colorList = []
+        for i in range(n_clusters_):
+            col = (np.nanmean(imageCopy[labelledSegments[i]][:,0]), np.nanmean(imageCopy[labelledSegments[i]][:,1]), np.nanmean(imageCopy[labelledSegments[i]][:,2]))
+            imageCopy[labelledSegments[i]] = col
+            colorList.append(col)
+
+        col = []
         for i in range(numSegments):
             try:
                 if(labels[i] == -1):
-                    imageCopy[segments == i] = [0, 0, 0]
-                else:
-                    imageCopy[segments == i] = col[labels[i]]
+                    imageCopy[segments == i] = (0, 0, 0)
             except:
                 continue
 
-        col.append((0,0,0))
         #imageCopy = seg.mark_boundaries(imageCopy, segments)
-        #for i in range(medianTuples.shape[0]):
-        #   ax.scatter(medianTuples[i, 0], medianTuples[i, 1], medianTuples[i, 2], c = col[labels[i]], s = 40)
+        colorList.append((0,0,0))
+        for i in range(len(medianTuples)):
+           ax.scatter(medianTuples[i][0], medianTuples[i][1], medianTuples[i][2], c = colorList[labels[i]], s = 20)
         #ax.imshow(imageCopy)
         #plt.axis("off")
         fig3 = plt.figure("Layered")
@@ -82,7 +92,8 @@ def slic(image):
         fig2 = plt.figure("Raw Image")
         ax2 = fig2.add_subplot(1,1,1)
         ax2.imshow(image)
-        #plt.show()
+        plt.show()
         return imageCopy, [segments, labels, n_clusters_]
     except:
         return image
+

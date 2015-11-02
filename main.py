@@ -61,33 +61,18 @@ def getHistogram(image):
 
     return [Y, Cr, Cb]"""
 
+def segmentImage(*args):
+    id = args[0]
 
-def createCompositeHistogram(*args):
-    tag = args[0][0]
-    imageIds = args[0][1]
-    print "Starting tag: " + tag
-    count = 0
-    compositeHist = None
+    print "Start id: " + str(id)
 
-    for id in imageIds:
-        image = loadImage(id)
-        if not image == None:
-            print id
-            segmented, labels = cl.slic(image)
-            io.imsave("segmented/" + str(id) + ".jpg", image)
-            io.imsave("segmented/" + str(id) + "_segmented.jpg", segmented)
-            """histogram = getHistogram(image)
-            if count == 0:
-                compositeHist = histogram
-                count += 1
-            else:
-                print compositeHist.shape
-                compositeHist = cv2.add(compositeHist, histogram)
-                print compositeHist.shape"""
+    image = loadImage(id)
+    if not image == None:
+        segmented, labels = cl.slic(image)
+        io.imsave("segmented/" + str(id) + ".jpg", image)
+        io.imsave("segmented/" + str(id) + "_segmented.jpg", segmented)
 
-    print "Finish tag: " + tag
-
-    return compositeHist
+    print "Finish id: " + str(id)
 
 def readImagePoints(id, pointList):
     image = loadImage(id)
@@ -130,34 +115,11 @@ def getTopTags():
 
     return topTags, tagsDict
 
-def writeHistograms(topTags, tagsDict):
-    p = mp.Pool(6)
-    compositeHists = []
+def startSegment( imageIds):
+    p = mp.Pool(1)
 
-    topTagsList = []
-    for tag in topTags:
-        topTagsList.append([tag, tagsDict[tag]])
-
-    compositeHistograms = p.map(createCompositeHistogram, topTagsList)
-
-    for histogram in compositeHistograms:
-        compositeHists.append(histogram)
-
-    writeCompositeHistograms(topTags, compositeHists)
-
-    with open('topTags.txt', 'w+') as tagsOut:
-        for tag in topTags:
-            tagsOut.write(tag + '\n')
-
-def loadHistograms():
-    hists = np.load('histogram.npz')
-
-    tagsFile = open('topTags.txt', 'rU')
-    tags = []
-    for line in tagsFile:
-        tags.append(line.rstrip())
-
-    return tags, hists
+    p.map(segmentImage, imageIds)
+    #writeCompositeHistograms(topTags, compositeHists)
 
 def calcBackProject(image, tags, histograms):
     probability = {}
@@ -173,29 +135,22 @@ def calcBackProject(image, tags, histograms):
 
     return probability
 
+def loadHistograms():
+    hists = np.load('histogram.npz')
+
+    tagsFile = open('topTags.txt', 'rU')
+    tags = []
+    for line in tagsFile:
+        tags.append(line.rstrip())
+
+    return tags, hists
 
 def main():
     #readImagePoints('100346')
+    imageIds = loadIds(0, 4000)
+    startSegment(imageIds)
 
-    topTags, tagsDict = getTopTags()
-
-    writeHistograms(topTags, tagsDict)
-
-    tags, histograms = loadHistograms()
-    imageIds = loadIds(0, 100)
-
-    probabilityList = []
-    for id in imageIds:
-        print id
-        probabilityList.append(calcBackProject(loadImage(id), tags, histograms))
-
-    count = 0
-    for probability in probabilityList:
-        print imageIds[count]
-        for tag in topTags:
-            print tag + ': ' + str(probability[tag])
-        count += 1
-
+    #tags, histograms = loadHistograms()
 
 if __name__ == '__main__':
     main()
