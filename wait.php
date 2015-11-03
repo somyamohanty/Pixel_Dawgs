@@ -12,7 +12,7 @@
 <body>
 
 <?php
-$username = "svk38";
+$username = "ncr55";
 $password = "ab1234";
 $hostname = "localhost";
 
@@ -93,25 +93,21 @@ $("#test").click(function(e) {
 });
    </script>
 
+<a id="test" >
+	<?php echo "<img src='http://127.0.0.1/".$row['imgid']."_segmented.jpg' style='border-style:none;position:relative;top:-8px;left:-8px;' alt='error'/>"; ?>
+</a>
+<?php echo "<img src='http://127.0.0.1/".$row['imgid'].".jpg' style='border-style:none;position:relative;top:-8px;left:-8px;' alt='error'/>"; ?>
+
 <table>
   <tr>
     <td>
-		<div id="div1">
-      			<a id="test">
-			<?php echo "<img src='http://127.0.0.1/".$row['imgid'].".jpg' alt='error'/>"; ?>
-      			</a>
-		</div>
-    </td>
-    <td>
-	<div id="div2">
-	<center>
 	<p id="demo">Is this the end of the world?</p>
 	<button onclick="myFunctiontg1()" type="button"><?php echo $row['tag1']; ?></button> <p id="tag1"></p>
 	<button onclick="myFunctiontg2()" type="button"><?php echo $row['tag2']; ?></button> <p id="tag2"></p>
 	<button onclick="myFunctiontg3()" type="button"><?php echo $row['tag3']; ?></button> <p id="tag3"></p>
 	<button onclick="myFunctiontg4()" type="button"><?php echo $row['tag4']; ?></button> <p id="tag4"></p>
 	<button onclick="myFunctiontg5()" type="button"><?php echo $row['tag5']; ?></button> <p id="tag5"></p>
-	<button onclick="myFunctionsave()" type="button">Save</button> </div>
+	<button onclick="myFunctionsave()" type="button">Save</button> 
     </td>
   </tr>
 </table>
