@@ -8,7 +8,7 @@ for each in fi:
 
 imageslist = []
 import os
-for root, dirs, files in os.walk("segmented"):
+for root, dirs, files in os.walk("interface_test_images"):
     for file in files:
 
         if file.endswith(".jpg"):
@@ -19,7 +19,8 @@ for root, dirs, files in os.walk("segmented"):
 
 
 csvfile = open("newValidTags.csv", "w")
-fieldnames = ['ind', 'imgid', 'tag1','tag2', 'tag3','tag4', 'tag5', 'tag1c','tag2c', 'tag3c','tag4c', 'tag5c']
+fieldnames = ['ind', 'imgid', 'tag1','tag2', 'tag3','tag4', 'tag5', 'tag6','tag7', 'tag8','tag9', 'tag10',
+              'tag1c','tag2c', 'tag3c','tag4c', 'tag5c', 'tag6c','tag7c', 'tag8c','tag9c', 'tag10c']
 
 
 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -28,8 +29,8 @@ writer.writeheader()
 imagecounter = 1
 for each_id in imageslist:
     d = {'ind': "", 'imgid': "",
-     'tag1': "", 'tag2': "", 'tag3': "", 'tag4': "", 'tag5': "",
-     'tag1c': "",'tag2c': "",'tag3c': "",'tag4c': "",'tag5c': ""}
+     'tag1': "", 'tag2': "", 'tag3': "", 'tag4': "", 'tag5': "",'tag6': "", 'tag7': "", 'tag8': "", 'tag9': "", 'tag10': "",
+     'tag1c': "",'tag2c': "",'tag3c': "",'tag4c': "",'tag5c': "", 'tag6c': "",'tag7c': "",'tag8c': "",'tag9c': "",'tag10c': ""}
     #get the list of tags associated with each image
     tags = dictionary[each_id]
 
@@ -41,11 +42,12 @@ for each_id in imageslist:
 
     d.update({fieldnames[0]:imagecounter})
     d.update({fieldnames[1]:each_id})
-    print d
+    #print d
     inde = 2
     for ea in sorted_di:
         if inde <= 6:
             d.update({fieldnames[inde]:ea[0]})
+            #print inde
             inde+=1
     writer.writerow(d)
     imagecounter+=1
