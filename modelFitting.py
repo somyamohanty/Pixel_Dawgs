@@ -6,7 +6,7 @@ import json
 from sklearn.externals import joblib
 
 def fitModel():
-    featureVectorFile = open('refinedFeatureVectors.json.json')
+    featureVectorFile = open('refinedFeatureVectors.json')
     featureVectors = featureVectorFile.read()
     featureVectors = json.loads(featureVectors)
     X, y = [], []
