@@ -2,7 +2,7 @@ import cv2
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-import skimage
+import skimage.io as io
 import skimage.segmentation as seg
 import skimage.color as skcol
 import skimage.filters as filt
@@ -80,20 +80,18 @@ def slic(image):
             except:
                 continue
 
+
         #imageCopy = seg.mark_boundaries(imageCopy, segments)
+
         colorList.append((0,0,0))
-        for i in range(len(medianTuples)):
-           ax.scatter(medianTuples[i][0], medianTuples[i][1], medianTuples[i][2], c = colorList[labels[i]], s = 20)
+        #for i in range(len(medianTuples)):
+        #   ax.scatter(medianTuples[i][0], medianTuples[i][1], medianTuples[i][2], c = colorList[labels[i]], s = 20)
         #ax.imshow(imageCopy)
         #plt.axis("off")
-        fig3 = plt.figure("Layered")
-        ax3 = fig3.add_subplot(111)
-        ax3.imshow(imageCopy)
-        fig2 = plt.figure("Raw Image")
-        ax2 = fig2.add_subplot(1,1,1)
-        ax2.imshow(image)
+
         plt.show()
         return imageCopy, [segments, labels, n_clusters_]
+
     except:
         return image
 
