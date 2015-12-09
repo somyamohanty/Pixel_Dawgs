@@ -91,7 +91,7 @@ def segmentImage(*args):
 
     print "Start id: " + str(id)
 
-    image = loadImage(id, "sampleimages\\")
+    image = loadImage(id, "../sampleimages\\")
     if not image == None:
         segmented, labels = cl.slic(image)
         io.imsave("segmented/" + str(id) + ".jpg", image)
@@ -118,7 +118,7 @@ def getTaggedSegments(id, taggedPoints, possibleTags):
 
         taggedPoints[id][li[i]] = newPoints
 
-    image = loadImage(id, "sampleimages\\")
+    image = loadImage(id, "../sampleimages\\")
     sobelImage = filt.sobel(skcol.rgb2gray(image))
     if not image == None:
         segmented, labels = cl.slic(image)
@@ -250,7 +250,7 @@ def loadFeatureVectors():
 
     return featureVecs
 
-def getImageFeatures(imageId, targetDir = "sampleimages\\"):
+def getImageFeatures(imageId, targetDir = "../sampleimages\\"):
     image = loadImage(imageId, targetDir)
     sobelImage = filt.sobel(skcol.rgb2gray(image))
     fig = plt.figure()
@@ -288,10 +288,10 @@ def loadFeatureVectors():
 def main():
     #readImagePoints()
     #imageIds = loadIds(0, 4000)
-    resultIds = loadResultIds("resultimages\\")
+    resultIds = loadResultIds("../resultimages\\")
     #print imageIds[0]
     for image in resultIds:
-        features = getImageFeatures(image, "resultimages\\")
+        features = getImageFeatures(image, "../resultimages\\")
         predictNew(features)
     #print len(features)
     #print features
