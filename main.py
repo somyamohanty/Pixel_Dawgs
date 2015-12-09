@@ -7,7 +7,14 @@ import numpy as np
 import pandas as pd
 import multiprocessing as mp
 import clustering as cl
+import json
+
+from featureVec import generateFeatureVectors
+from featureVec import getImageFeatureVectors
 from skimage import io
+from dbprocessor import getTaggedImages
+
+from functools import partial
 
 __author__ = 'nrosetti94'
 __main__ = 1
@@ -49,6 +56,14 @@ def loadImage(id):
         return image
     return None
 
+def getPossibleTags():
+    possibleTags = []
+    with open("tagslist.txt") as tagsFile:
+        tags = csv.reader(tagsFile)
+        for row in tags:
+            possibleTags.append(row)
+
+    return possibleTags
 
 def getHistogram(image):
     #this should give just the Cr and Cb channels
@@ -74,15 +89,67 @@ def segmentImage(*args):
 
     print "Finish id: " + str(id)
 
-def readImagePoints(id, pointList):
+def getTaggedSegments(id, taggedPoints, possibleTags):
+
+    li = ['tag1c', 'tag2c', 'tag3c', 'tag4c', 'tag5c', 'tag6c', 'tag7c', 'tag8c', 'tag9c', 'tag10c']
+    li2 = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10']
+
+    possibleTagsDict = {}
+    for tag in possibleTags:
+        possibleTagsDict[tag[0]] = []
+
+    print "Processing id: " + id
+    for i in range(len(li)):
+        newPoints = []
+        for point in taggedPoints[id][li[i]]:
+            newPoints.append(point.split(':'))
+
+        taggedPoints[id][li[i]] = newPoints
+
     image = loadImage(id)
     if not image == None:
         segmented, labels = cl.slic(image)
-        segments = labels[0]
-        n_clusters = labels[2]
+        labelledSegments = labels[0]
         labels = labels[1]
+        n_clusters = labels[2]
 
-        print labels[labels == 0]
+    for i in range(len(li)):
+        for point in taggedPoints[id][li[i]]:
+            print point
+            for segment in labelledSegments:
+                #add list of pixels to corresponding tag
+                try:
+                    if len(point) == 2:
+                        if point[0] != '' and point[1] != '':
+                            if segment[int(point[1])][int(point[0])] and taggedPoints[id][li2[i]] != 'None':
+                                possibleTagsDict[taggedPoints[id][li2[i]].replace('"', '')].append(image[segment])
+                except:
+                    continue
+    return possibleTagsDict
+
+def readImagePoints():
+    li = ['tag1c', 'tag2c', 'tag3c', 'tag4c', 'tag5c', 'tag6c', 'tag7c', 'tag8c', 'tag9c', 'tag10c']
+    li2 = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10']
+    ids, taggedPointsList = getTaggedImages()
+    possibleTagsList = getPossibleTags()
+
+    p = mp.Pool(6)
+
+    tagDicts = p.map_async(partial(getTaggedSegments, possibleTags=possibleTagsList, taggedPoints=taggedPointsList), ids)
+
+    possibleTagsDict = {}
+    for tag in possibleTagsList:
+        possibleTagsDict[tag[0]] = []
+
+    for dict in tagDicts.get():
+        for key in dict:
+            for value in dict[key]:
+                possibleTagsDict[key].append(value)
+
+    featureVectors = generateFeatureVectors(possibleTagsList, possibleTagsDict)
+
+    with open("featureVectors.txt", 'w') as outFile:
+        outFile.write(json.dumps(featureVectors))
 
 def writeCompositeHistograms(tags, hist):
     histDict = {}
@@ -145,10 +212,70 @@ def loadHistograms():
 
     return tags, hists
 
+def getImageFeatures(imageId):
+    image = loadImage(imageId)
+    if not image == None:
+        segmented, labels = cl.slic(image)
+        labelledSegments = labels[0]
+        labels = labels[1]
+        n_clusters = labels[2]
+
+    imageSegments = []
+    for segment in labelledSegments:
+        imageSegments.append(image[segment])
+
+    print len(imageSegments)
+    return getImageFeatureVectors(imageSegments)
+
+def loadFeatureVectors():
+    with open("featureVectors.txt", 'r') as featureVectors:
+        featureVecs = json.loads(featureVectors.readline())
+    for tag in featureVecs:
+        if len(featureVecs[tag]) > 0:
+            newVectors = []
+            for i in range(0, len(featureVecs[tag])/6):
+                newVectors.append(featureVecs[tag][i:i+6])
+            featureVecs[tag] = newVectors
+
+    return featureVecs
+
+def getImageFeatures(imageId):
+    image = loadImage(imageId)
+    if not image == None:
+        segmented, labels = cl.slic(image)
+        labelledSegments = labels[0]
+        labels = labels[1]
+        n_clusters = labels[2]
+
+    imageSegments = []
+    for segment in labelledSegments:
+        imageSegments.append(image[segment])
+
+    print len(imageSegments)
+    return getImageFeatureVectors(imageSegments)
+
+def loadFeatureVectors():
+    with open("featureVectors.txt", 'r') as featureVectors:
+        featureVecs = json.loads(featureVectors.readline())
+    for tag in featureVecs:
+        if len(featureVecs[tag]) > 0:
+            newVectors = []
+            for i in range(0, len(featureVecs[tag])/6):
+                newVectors.append(featureVecs[tag][i:i+6])
+            featureVecs[tag] = newVectors
+
+    return featureVecs
+
 def main():
-    #readImagePoints('100346')
+    #readImagePoints()
     imageIds = loadIds(0, 4000)
-    startSegment(imageIds)
+    print imageIds[0]
+
+    #features = getImageFeatures(imageIds[0])
+    #print len(features)
+    #print features
+    loadFeatureVectors()
+    #startSegment(imageIds)
 
     #tags, histograms = loadHistograms()
 
