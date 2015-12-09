@@ -5,7 +5,7 @@ from sklearn import svm
 from sklearn.externals import joblib
 
 def predictNew(featureVector):
-    clf = joblib.load('./fittedModels/fittedModel.pkl')
+    clf = joblib.load('../data/fittedModels/fittedModel.pkl')
     probs = []
     for feature in featureVector:
         probs.append(zip(clf.classes_, clf.predict_proba(feature)[0]))
