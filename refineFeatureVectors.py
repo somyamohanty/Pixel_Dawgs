@@ -3,7 +3,7 @@ __author__ = 'SHREYA'
 import json
 
 def load_json():
-    featureVectorFile = open('featureVectors.txt')
+    featureVectorFile = open('../featureVectors.txt')
     outputFile = open('../output.json', 'w+')
     featureVectors = featureVectorFile.read()
     featureVectors = json.loads(featureVectors)
