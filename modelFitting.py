@@ -21,7 +21,7 @@ def fitModel():
                 flag = False
     clf = svm.SVC(gamma=0.001, C=100.)
     clf.fit(X, y)
-    print joblib.dump(clf, '../fittedModel.pkl')
+    print joblib.dump(clf, './fittedModels/fittedModel.pkl')
     featureVectorFile.close()
 
 fitModel()
