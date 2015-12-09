@@ -3,7 +3,7 @@ __author__ = 'SHREYA'
 import json
 
 def load_json():
-    featureVectorFile = open('../featureVectors.txt')
+    featureVectorFile = open('featureVectors.txt')
     outputFile = open('refinedFeatureVectors.json', 'w+')
     featureVectors = featureVectorFile.read()
     featureVectors = json.loads(featureVectors)
@@ -11,10 +11,7 @@ def load_json():
     for tag in featureVectors:
         print tag
         if featureVectors[tag] != []:
-            if tag == 'snow' or tag == 'floor' or tag == 'concrete':
-                pass
-            else:
-                refinedData[tag] = featureVectors[tag]
+            refinedData[tag] = featureVectors[tag]
 
     json.dump(refinedData, outputFile)
     featureVectorFile.close()
