@@ -26,7 +26,7 @@ __main__ = 1
 
 def loadTagMap():
     tagsDict = []
-    with open("Tagsmap.csv") as csvFile:
+    with open("../data/Tagsmap.csv") as csvFile:
         tags = csv.reader(csvFile, delimiter=",")
 
         for row in tags:
@@ -35,7 +35,7 @@ def loadTagMap():
 
 def loadIds(start, end):
     imageIds = []
-    with open("validTags.csv") as tagFile:
+    with open("../data/validTags.csv") as tagFile:
         tags = csv.reader(tagFile, delimiter=",")
         count = 0
         for line in tags:
@@ -68,7 +68,7 @@ def loadImage(id, targetDir):
 
 def getPossibleTags():
     possibleTags = []
-    with open("tagslist.txt") as tagsFile:
+    with open("../data/tagslist.txt") as tagsFile:
         tags = csv.reader(tagsFile)
         for row in tags:
             possibleTags.append(row)
@@ -174,7 +174,7 @@ def readImagePoints():
 
     featureVectors = generateFeatureVectors(possibleTagsList, possibleTagsDict, possibleTagsDictSobel)
 
-    with open("featureVectors.txt", 'w') as outFile:
+    with open("../data/featureVectors.txt", 'w') as outFile:
         outFile.write(json.dumps(featureVectors))
 
 def writeCompositeHistograms(tags, hist):
@@ -231,7 +231,7 @@ def calcBackProject(image, tags, histograms):
 def loadHistograms():
     hists = np.load('histogram.npz')
 
-    tagsFile = open('topTags.txt', 'rU')
+    tagsFile = open('../data/topTags.txt', 'rU')
     tags = []
     for line in tagsFile:
         tags.append(line.rstrip())
@@ -239,7 +239,7 @@ def loadHistograms():
     return tags, hists
 
 def loadFeatureVectors():
-    with open("featureVectors.txt", 'r') as featureVectors:
+    with open("../data/featureVectors.txt", 'r') as featureVectors:
         featureVecs = json.loads(featureVectors.readline())
     for tag in featureVecs:
         if len(featureVecs[tag]) > 0:
@@ -274,7 +274,7 @@ def getImageFeatures(imageId, targetDir = "sampleimages\\"):
     return getImageFeatureVectors(imageSegments, sobelSegments)
 
 def loadFeatureVectors():
-    with open("featureVectors.txt", 'r') as featureVectors:
+    with open("../data/featureVectors.txt", 'r') as featureVectors:
         featureVecs = json.loads(featureVectors.readline())
     for tag in featureVecs:
         if len(featureVecs[tag]) > 0:
