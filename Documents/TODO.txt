@@ -1,0 +1,16 @@
+TODO List
+1.	Finalize segmentation
+2.	Finalize GUI
+3.	Use GUI in conjuction with segmentation to manually tag ~4000 images
+4.	Create a csv or some way to feed image id with list of points into a function
+5.	Write code to take an image id with a list of points and reproduce segments 
+6.	Create a feature vector for each tagged layer in the image (PCA or curve fitting?)
+7.	Associate this feature vector with a list of tags
+8.	Train a machine learning algorithm (KNN or SVM) with the feature vectors
+9.	Take input image and segment, create a feature vector for each segment, use the machine learning algorithm to decide what to tag each segment
+
+Unknowns
+Is segmentation good enough?
+Will PCA or curve fitting create a good enough feature vector?
+Should we include edge response in the feature vector?
+Should we use size as an additional metric that influences tag generation? (size of segment/size of image * probability?) (maybe weight towards one)
