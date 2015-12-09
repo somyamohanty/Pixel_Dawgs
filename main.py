@@ -8,18 +8,21 @@ import pandas as pd
 import multiprocessing as mp
 import clustering as cl
 import json
-
+import skimage.filters as filt
+import skimage.color as skcol
+from matplotlib import pyplot as plt
 from featureVec import generateFeatureVectors
 from featureVec import getImageFeatureVectors
 from skimage import io
 from dbprocessor import getTaggedImages
+from predictNew import predictNew
 
 from functools import partial
 
 __author__ = 'nrosetti94'
 __main__ = 1
 
-targetDir = "sampleimages\\"
+
 
 def loadTagMap():
     tagsDict = []
@@ -46,8 +49,15 @@ def loadIds(start, end):
 
     return imageIds
 
+def loadResultIds(targetDir):
+    idList = []
+    for fi in os.listdir(targetDir):
+        if fi.endswith('.jpg'):
+            idList.append(fi.split('.')[0])
 
-def loadImage(id):
+    return idList
+
+def loadImage(id, targetDir):
     filename = targetDir + id + ".jpg"
     image = io.imread(filename)
     if image == None:
@@ -81,7 +91,7 @@ def segmentImage(*args):
 
     print "Start id: " + str(id)
 
-    image = loadImage(id)
+    image = loadImage(id, "sampleimages\\")
     if not image == None:
         segmented, labels = cl.slic(image)
         io.imsave("segmented/" + str(id) + ".jpg", image)
@@ -95,8 +105,10 @@ def getTaggedSegments(id, taggedPoints, possibleTags):
     li2 = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10']
 
     possibleTagsDict = {}
+    possibleTagsDictSobel = {}
     for tag in possibleTags:
         possibleTagsDict[tag[0]] = []
+        possibleTagsDictSobel[tag[0]] = []
 
     print "Processing id: " + id
     for i in range(len(li)):
@@ -106,7 +118,8 @@ def getTaggedSegments(id, taggedPoints, possibleTags):
 
         taggedPoints[id][li[i]] = newPoints
 
-    image = loadImage(id)
+    image = loadImage(id, "sampleimages\\")
+    sobelImage = filt.sobel(skcol.rgb2gray(image))
     if not image == None:
         segmented, labels = cl.slic(image)
         labelledSegments = labels[0]
@@ -115,7 +128,6 @@ def getTaggedSegments(id, taggedPoints, possibleTags):
 
     for i in range(len(li)):
         for point in taggedPoints[id][li[i]]:
-            print point
             for segment in labelledSegments:
                 #add list of pixels to corresponding tag
                 try:
@@ -123,9 +135,11 @@ def getTaggedSegments(id, taggedPoints, possibleTags):
                         if point[0] != '' and point[1] != '':
                             if segment[int(point[1])][int(point[0])] and taggedPoints[id][li2[i]] != 'None':
                                 possibleTagsDict[taggedPoints[id][li2[i]].replace('"', '')].append(image[segment])
+                                possibleTagsDictSobel[taggedPoints[id][li2[i]].replace('"', '')].append(np.nanmean(sobelImage[segment]))
                 except:
                     continue
-    return possibleTagsDict
+                    
+    return [possibleTagsDict, possibleTagsDictSobel]
 
 def readImagePoints():
     li = ['tag1c', 'tag2c', 'tag3c', 'tag4c', 'tag5c', 'tag6c', 'tag7c', 'tag8c', 'tag9c', 'tag10c']
@@ -133,20 +147,32 @@ def readImagePoints():
     ids, taggedPointsList = getTaggedImages()
     possibleTagsList = getPossibleTags()
 
-    p = mp.Pool(6)
+    p = mp.Pool(5)
 
-    tagDicts = p.map_async(partial(getTaggedSegments, possibleTags=possibleTagsList, taggedPoints=taggedPointsList), ids)
+    dicts = p.map_async(partial(getTaggedSegments, possibleTags=possibleTagsList, taggedPoints=taggedPointsList), ids)
 
     possibleTagsDict = {}
+    possibleTagsDictSobel = {}
     for tag in possibleTagsList:
         possibleTagsDict[tag[0]] = []
+        possibleTagsDictSobel[tag[0]] = []
 
-    for dict in tagDicts.get():
-        for key in dict:
-            for value in dict[key]:
+    tagDicts = dicts.get()
+
+    for pair in tagDicts:
+        print len(pair)
+        for key in pair[0]:
+            for value in pair[0][key]:
                 possibleTagsDict[key].append(value)
 
-    featureVectors = generateFeatureVectors(possibleTagsList, possibleTagsDict)
+    for pair in tagDicts:
+        for key in pair[1]:
+            for value in pair[1][key]:
+                possibleTagsDictSobel[key].append(value)
+
+    print possibleTagsDictSobel
+
+    featureVectors = generateFeatureVectors(possibleTagsList, possibleTagsDict, possibleTagsDictSobel)
 
     with open("featureVectors.txt", 'w') as outFile:
         outFile.write(json.dumps(featureVectors))
@@ -212,21 +238,6 @@ def loadHistograms():
 
     return tags, hists
 
-def getImageFeatures(imageId):
-    image = loadImage(imageId)
-    if not image == None:
-        segmented, labels = cl.slic(image)
-        labelledSegments = labels[0]
-        labels = labels[1]
-        n_clusters = labels[2]
-
-    imageSegments = []
-    for segment in labelledSegments:
-        imageSegments.append(image[segment])
-
-    print len(imageSegments)
-    return getImageFeatureVectors(imageSegments)
-
 def loadFeatureVectors():
     with open("featureVectors.txt", 'r') as featureVectors:
         featureVecs = json.loads(featureVectors.readline())
@@ -239,8 +250,13 @@ def loadFeatureVectors():
 
     return featureVecs
 
-def getImageFeatures(imageId):
-    image = loadImage(imageId)
+def getImageFeatures(imageId, targetDir = "sampleimages\\"):
+    image = loadImage(imageId, targetDir)
+    sobelImage = filt.sobel(skcol.rgb2gray(image))
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1,1,1)
+    ax1.imshow(image)
+    plt.show()
     if not image == None:
         segmented, labels = cl.slic(image)
         labelledSegments = labels[0]
@@ -251,8 +267,11 @@ def getImageFeatures(imageId):
     for segment in labelledSegments:
         imageSegments.append(image[segment])
 
-    print len(imageSegments)
-    return getImageFeatureVectors(imageSegments)
+    sobelSegments = []
+    for segment in labelledSegments:
+        sobelSegments.append(np.nanmean(sobelImage[segment]))
+
+    return getImageFeatureVectors(imageSegments, sobelSegments)
 
 def loadFeatureVectors():
     with open("featureVectors.txt", 'r') as featureVectors:
@@ -268,13 +287,15 @@ def loadFeatureVectors():
 
 def main():
     #readImagePoints()
-    imageIds = loadIds(0, 4000)
-    print imageIds[0]
-
-    #features = getImageFeatures(imageIds[0])
+    #imageIds = loadIds(0, 4000)
+    resultIds = loadResultIds("resultimages\\")
+    #print imageIds[0]
+    for image in resultIds:
+        features = getImageFeatures(image, "resultimages\\")
+        predictNew(features)
     #print len(features)
     #print features
-    loadFeatureVectors()
+    #loadFeatureVectors()
     #startSegment(imageIds)
 
     #tags, histograms = loadHistograms()

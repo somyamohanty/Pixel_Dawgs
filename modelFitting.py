@@ -19,7 +19,7 @@ def fitModel():
             elif flag:
                 print tag
                 flag = False
-    clf = svm.SVC(gamma=0.001, C=100.)
+    clf = svm.SVC(gamma=0.001, C=100., probability=True)
     clf.fit(X, y)
     print joblib.dump(clf, './fittedModels/fittedModel.pkl')
     featureVectorFile.close()

@@ -34,8 +34,7 @@ def slic(image):
         imageCopy = img_as_float(image)
         sobel = filt.sobel(skcol.rgb2gray(image))
         segments = seg.slic(imageCopy, numSegments, sigma=1, convert2lab=True, enforce_connectivity=False, slic_zero=False)
-        fig = plt.figure("Superpixels -- %d segments" % (numSegments))
-        ax = fig.add_subplot(111, projection='3d')
+
         medianTuples = []
         edgeResponse = []
         for i in range(numSegments):
@@ -89,8 +88,7 @@ def slic(image):
         #ax.imshow(imageCopy)
         #plt.axis("off")
 
-        plt.show()
-        return imageCopy, [segments, labels, n_clusters_]
+        return imageCopy, [labelledSegments, labels, n_clusters_]
 
     except:
         return image
