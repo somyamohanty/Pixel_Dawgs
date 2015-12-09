@@ -4,7 +4,7 @@ import json
 
 def load_json():
     featureVectorFile = open('../featureVectors.txt')
-    outputFile = open('../output.json', 'w+')
+    outputFile = open('refinedFeatureVectors.json', 'w+')
     featureVectors = featureVectorFile.read()
     featureVectors = json.loads(featureVectors)
     refinedData = {}
