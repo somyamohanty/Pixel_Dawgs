@@ -34,7 +34,8 @@ def slic(image):
         imageCopy = img_as_float(image)
         sobel = filt.sobel(skcol.rgb2gray(image))
         segments = seg.slic(imageCopy, numSegments, sigma=1, convert2lab=True, enforce_connectivity=False, slic_zero=False)
-
+        fig = plt.figure("Superpixels -- %d segments" % (numSegments))
+        ax = fig.add_subplot(111, projection='3d')
         medianTuples = []
         edgeResponse = []
         for i in range(numSegments):
@@ -44,7 +45,7 @@ def slic(image):
         medianTuples = np.array(medianTuples)
         edgeResponse = np.array(edgeResponse)
         cv2.normalize(medianTuples, medianTuples, 0, 255, cv2.NORM_MINMAX)
-        cv2.normalize(edgeResponse, edgeResponse, 0, 20, cv2.NORM_MINMAX)
+        cv2.normalize(edgeResponse, edgeResponse, 0, 25, cv2.NORM_MINMAX)
         medianTuples = medianTuples.tolist()
         for i in range(len(medianTuples)):
             medianTuples[i].append(edgeResponse[i])
@@ -68,21 +69,20 @@ def slic(image):
         colorList = []
         for i in range(n_clusters_):
             col = (np.nanmean(imageCopy[labelledSegments[i]][:,0]), np.nanmean(imageCopy[labelledSegments[i]][:,1]), np.nanmean(imageCopy[labelledSegments[i]][:,2]))
-            #col = np.random.rand(3,)
             imageCopy[labelledSegments[i]] = col
             colorList.append(col)
 
-
+        col = []
         for i in range(numSegments):
             try:
                 if(labels[i] == -1):
                     imageCopy[segments == i] = (0, 0, 0)
             except:
                 continue
-        print
-        #imageCopy = seg.mark_boundaries(image, segments)
+
+        #imageCopy = seg.mark_boundaries(imageCopy, segments)
         colorList.append((0,0,0))
-        """for i in range(len(medianTuples)):
+        for i in range(len(medianTuples)):
            ax.scatter(medianTuples[i][0], medianTuples[i][1], medianTuples[i][2], c = colorList[labels[i]], s = 20)
         #ax.imshow(imageCopy)
         #plt.axis("off")
@@ -92,8 +92,8 @@ def slic(image):
         fig2 = plt.figure("Raw Image")
         ax2 = fig2.add_subplot(1,1,1)
         ax2.imshow(image)
-        plt.show()"""
-        return imageCopy, [labelledSegments, labels, n_clusters_]
+        plt.show()
+        return imageCopy, [segments, labels, n_clusters_]
     except:
         return image
 
